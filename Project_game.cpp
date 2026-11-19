@@ -60,15 +60,15 @@ int main() {
                     int selisih = abs(tebakan - angkaRahasia);
 
                     if (tebakan > angkaRahasia) {
-                        mvprintw(8, 4, "Tebakan terlalu besar.     ");
+                        mvprintw(8, 4, "Tebakan terlalu besar!.     ");
                     } else {
-                        mvprintw(8, 4, "Tebakan terlalu kecil.     ");
+                        mvprintw(8, 4, "Tebakan terlalu kecil!.     ");
                     }
 
                     if (selisih <= 10) {
-                        mvprintw(9, 4, "Info: Sudah cukup dekat.   ");
+                        mvprintw(9, 4, "Info: Sudah cukup dekat!.   ");
                     } else {
-                        mvprintw(9, 4, "Info: Masih cukup jauh.    ");
+                        mvprintw(9, 4, "Info: Masih cukup jauh!.    ");
                     }
                 }
                 refresh();
