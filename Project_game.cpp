@@ -11,7 +11,7 @@ int main() {
     noecho();
     start_color();
 
-    init_pair(1, COLOR_BROWN, COLOR_BLACK);
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
     init_pair(3, COLOR_RED, COLOR_BLACK);
 
@@ -23,13 +23,13 @@ int main() {
         box(stdscr, 0, 0);
 
         attron(COLOR_PAIR(1));
-        mvprintw(2, 4, "GAME TEBAK ANGKA (PROGRESS)");
+        mvprintw(2, 4, "GUESS THE NUMBERS");
         mvprintw(4, 4, "1. Mulai Main");
         mvprintw(5, 4, "2. Keluar");
         mvprintw(7, 4, "Pilih [1-2]: ");
         attroff(COLOR_PAIR(1));
         refresh();
-
+    
         pilihan = getch();
 
         if (pilihan == '1') {
@@ -75,15 +75,15 @@ int main() {
             }
 
             if (menang) {
-                attron(COLOR_PAIR(2));
-                mvprintw(11, 4, "Menang! Angkanya: %d", angkaRahasia);
-                attroff(COLOR_PAIR(2));
+                attron(COLOR_PAIR(2)) | A_BOLD;
+                mvprintw(11, 4, "MENANG!! Angkanya: %d", angkaRahasia);
+                attroff(COLOR_PAIR(2) | A_BOLD);
             } else {
-                attron(COLOR_PAIR(3));
-                mvprintw(11, 4, "Kalah! Angkanya: %d", angkaRahasia);
-                attroff(COLOR_PAIR(3));
+                attron(COLOR_PAIR(3)) | A_BOLD;
+                mvprintw(11, 4, "COBA LAGI!, Angkanya: %d", angkaRahasia);
+                attroff(COLOR_PAIR(3)) | A_BOLD;
             }
-
+            
             mvprintw(13, 4, "Tekan tombol apa saja untuk kembali...");
             refresh();
             getch();
