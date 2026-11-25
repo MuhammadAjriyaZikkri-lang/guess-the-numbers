@@ -5,11 +5,24 @@
 
 using namespace std;
 
+int hitungPoint(int nyawa) {
+    switch (nyawa) {
+        case 5: return 1000;
+        case 4: return 900;
+        case 3: return 800;
+        case 2: return 700;
+        case 1: return 600;
+        default: return 0;
+    }
+}
+
 int main() {
     initscr();
     cbreak();
     noecho();
     start_color();
+    int score = 0;
+    int point = 0;
 
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
@@ -40,7 +53,7 @@ int main() {
             int tebakan = 0;
             int nyawa = 5;
             bool menang = false;
-
+            
             mvprintw(2, 4, "Tebak angka 1 sampai 100!");
 
             while (nyawa > 0) {
@@ -75,13 +88,26 @@ int main() {
             }
 
             if (menang) {
-                attron(COLOR_PAIR(2)) | A_BOLD;
+
+                point = hitungPoint(nyawa);
+                score = score + point;
+
+                attron(COLOR_PAIR(2) | A_BOLD);
                 mvprintw(11, 4, "MENANG!! Angkanya: %d", angkaRahasia);
+                mvprintw(12, 4, "Point: +%d", point);
+                mvprintw(13, 4, "total score: %d", score);
                 attroff(COLOR_PAIR(2) | A_BOLD);
+
             } else {
-                attron(COLOR_PAIR(3)) | A_BOLD;
+
+                point = hitungPoint(nyawa);
+                score = score + point;
+
+                attron(COLOR_PAIR(3) | A_BOLD);
                 mvprintw(11, 4, "COBA LAGI!, Angkanya: %d", angkaRahasia);
-                attroff(COLOR_PAIR(3)) | A_BOLD;
+                mvprintw(12, 4, "Point yang di dapat: + %d", point);
+                mvprintw(13, 4, "total score: %d", score);
+                attroff(COLOR_PAIR(3) | A_BOLD);
             }
             
             mvprintw(13, 4, "Tekan tombol apa saja untuk kembali...");
