@@ -16,7 +16,7 @@ struct Pemain {
 vector<Pemain> daftarPemain;
 
 void loadUsers() {
-    daftarPemain.();
+    daftarPemain.clear();
 
     ifstream file("users.txt");
     Pemain p;
@@ -44,9 +44,9 @@ int cariPemain(const string& username) {
     return -1;
 }
 
-void simpanRiwayat(const string username, int level, int point, string hasil) {
+void simpanRiwayat(const string username, int point, string hasil) {
     ofstream file ("riwayat.txt", ios::app);
-    file << username << " " << level << " " << point << " " << hasil << endl;
+    file << username << " " << " " << point << " " << hasil << endl;
     file.close();
 }
 
@@ -67,48 +67,42 @@ void tunggu() {
     getch();
 }
 
-void login() {
+void registerPemain() {
     clear();
 
-    int height = 10;
-    int width = 50;
-    int startY = 5;
-    int startX = 15;
-    string namaPengguna;
+    string username = inputText(2, 4, "masukan username: ");
+    string password = inputText(3, 4, "masukan password: ");
 
-    WINDOW *loginWin = newwin(height, width, startY, startX);
-    if (loginWin == NULL) {
-        return;
+    if (cariPemain(username) != -1) {
+        mvprintw (5, 4, "Username sudah terdaftar!");
+        tunggu();
     }
-    box(loginWin, 0, 0);
 
-    mvwprintw(loginWin, 1, 17, "LOGIN PENGGUNA");
-    mvwprintw(loginWin, 3, 5, "masukan username:");
+    daftarPemain.push_back({username, password, 0});
+    saveUsers();
 
-    char username[30] = "";
-    wrefresh(loginWin);
+    mvprintw(5, 4, "pendaftaran berhasil!");
+    tunggu();
+}
 
-    echo();
-    curs_set(1);
-
-    mvwgetnstr(loginWin, 5, 5, username, 29);
-
-    noecho();
-    curs_set(0);
-
-    namaPengguna = username;
-
-    mvwprintw(loginWin, 7, 5, "Login berhasil!!");
-    mvwprintw(loginWin, 8, 5, "welcomee! %s", username);
-
-    wrefresh(loginWin);
-
-    getch();
-
-    delwin(loginWin);
-
+    int login() {
     clear();
-    refresh();
+    mvprintw(2, 4, "LOGIN");
+
+    string username = inputText(6, 4, "masukan username: ");
+    string password = inputText(7, 5, "masukan password: ");
+
+    int index = cariPemain(username);
+
+    if (index != -1) {
+        if (daftarPemain[index].pasword == password) {
+            mvprintw(9, 4, "Login berhasil!");
+            tunggu();
+            return index;
+        }
+    }
+
+return -1;
 }
 
 int hitungPoint(int nyawa) {
