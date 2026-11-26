@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -78,12 +79,39 @@ void registerPemain() {
         tunggu();
     }
 
+<<<<<<< HEAD
     daftarPemain.push_back({username, password, 0});
     saveUsers();
 
     mvprintw(5, 4, "pendaftaran berhasil!");
     tunggu();
 }
+=======
+    mvwprintw(loginWin, 1, 17, "LOGIN PENGGUNA");
+    mvwprintw(loginWin, 3, 5, "masukan username:");
+    
+    char username[30] = "";
+    wrefresh(loginWin);
+
+    echo();
+    curs_set(1);
+
+    mvwgetnstr(loginWin, 5, 5, username, 29);
+
+    noecho();
+    curs_set(0);
+
+    namaPengguna = username;
+
+    mvwprintw(loginWin, 7, 5, "Login berhasil!!");
+    mvwprintw(loginWin, 8, 5, "welcomee! %s", username);
+
+    wrefresh(loginWin);
+
+    getch();
+
+    delwin(loginWin);
+>>>>>>> 197a7cf (Perbaiki login dan tambah leaderboard)
 
     int login() {
     clear();
@@ -116,7 +144,84 @@ int hitungPoint(int nyawa) {
     }
 }
 
-int main() {
+void tampilkanLeaderboard() {
+    clear();
+
+    vector<Pemain> ranking = daftarPemain;
+    sort(ranking.begin(), ranking.end(), [](const Pemain& a, const Pemain& b) {
+        return a.totalScore > b.totalScore;
+    });
+
+ mvprintw (2, 5, "========== LEADERBOARD ==========");
+ mvprintw (4, 5, "RANK");
+ mvprintw (4, 15, "USERNAME");
+ mvprintw (4, 35, "TOTAL SCORE");
+
+ int baris = 6;
+
+ for(int i = 0; i < ranking.size(); i++) {
+    mvprintw(baris, 5, "%d", i + 1);
+    mvprintw(baris, 15, "%s", ranking[i].username.c_str());
+    mvprintw(baris, 35, "%d", ranking[i].totalScore);
+
+    baris++;
+
+    if (baris >= LINES - 3) {
+        tunggu();
+        clear();
+        baris = 3;
+        }
+    }
+
+    if (ranking.empty()) {
+        mvprintw(6, 5, "Belum ada pemain yang terdaftar.");
+    }
+
+    tunggu();
+ }
+
+ void tampilkanRiwayat(string username) {
+    clear();
+
+    mvprintw(2, 5, "========== RIWAYAT PERMAINAN ==========");
+
+    ifstream file("history.txt");
+
+    string nama, hasil;
+    int level, point;
+    int baris = 5;
+    bool ditemukan = false;
+
+    mvprintw(4, 5, "LEVEL");
+    mvprintw(4, 15, "POINT");
+    mvprintw(4, 30, "HASIL");
+
+    while (file >> nama >> level >> point >> hasil) {
+        if (nama == username) {
+            mvprintw(baris, 5, "%d", level);
+            mvprintw(baris, 15, "%d", point);
+            mvprintw(baris, 30, "%s", hasil.c_str());
+
+            baris++;
+            ditemukan = true;
+            if (baris >= LINES -3) {
+                tunggu(); 
+                clear();
+                baris = 4;
+            }
+        }
+    }
+
+    file.close();
+
+    if(!ditemukan) {
+        mvprintw(6, 5, "Belum ada riwayat permainan.");
+    }
+
+    tunggu();
+ }
+
+ int main() {
     initscr();
     cbreak();
     noecho();
@@ -127,6 +232,7 @@ int main() {
     login();
 
     loadUsers();
+    tampilkanLeaderboard();
 
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
