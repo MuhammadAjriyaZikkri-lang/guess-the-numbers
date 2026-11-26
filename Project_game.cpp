@@ -16,7 +16,7 @@ struct Pemain {
 vector<Pemain> daftarPemain;
 
 void loadUsers() {
-    daftarPemain.clear();
+    daftarPemain.();
 
     ifstream file("users.txt");
     Pemain p;
