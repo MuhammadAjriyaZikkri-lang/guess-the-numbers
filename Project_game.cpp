@@ -2,8 +2,114 @@
 #include <ncurses.h>
 #include <cstdlib>
 #include <cmath>
+#include <vector>
+#include <fstream>
 
 using namespace std;
+
+struct Pemain {
+    string username;
+    string pasword;
+    int totalScore;
+};
+
+vector<Pemain> daftarPemain;
+
+void loadUsers() {
+    daftarPemain.clear();
+
+    ifstream file("users.txt");
+    Pemain p;
+
+    while (file >> p.username >> p.pasword >> p.totalScore) {
+        daftarPemain.push_back(p);
+    }
+    file.close();
+}
+
+void saveUsers() {
+    ofstream file("users.txt");
+
+    for (const auto& pemain : daftarPemain) {
+        file << pemain.username << " " << pemain.pasword << " " << pemain.totalScore << endl;
+    }
+    file.close();
+}
+int cariPemain(const string& username) {
+    for (int i = 0; i < daftarPemain.size(); i++) {
+        if (daftarPemain[i].username == username) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void simpanRiwayat(const string username, int level, int point, string hasil) {
+    ofstream file ("riwayat.txt", ios::app);
+    file << username << " " << level << " " << point << " " << hasil << endl;
+    file.close();
+}
+
+string inputText(int baris, int kolom, string label) {
+    char buffer[100] = "";
+
+    mvprintw(baris, kolom, "%s: ", label.c_str());
+    echo();
+    getnstr(buffer, 99);
+    noecho();
+    
+    return string(buffer);
+}
+
+void tunggu() {
+    mvprintw(LINES -2, 2, "Tekan tombol apa saja untuk melanjutkan...");
+    refresh();
+    getch();
+}
+
+void login() {
+    clear();
+
+    int height = 10;
+    int width = 50;
+    int startY = 5;
+    int startX = 15;
+    string namaPengguna;
+
+    WINDOW *loginWin = newwin(height, width, startY, startX);
+    if (loginWin == NULL) {
+        return;
+    }
+    box(loginWin, 0, 0);
+
+    mvwprintw(loginWin, 1, 17, "LOGIN PENGGUNA");
+    mvwprintw(loginWin, 3, 5, "masukan username:");
+
+    char username[30] = "";
+    wrefresh(loginWin);
+
+    echo();
+    curs_set(1);
+
+    mvwgetnstr(loginWin, 5, 5, username, 29);
+
+    noecho();
+    curs_set(0);
+
+    namaPengguna = username;
+
+    mvwprintw(loginWin, 7, 5, "Login berhasil!!");
+    mvwprintw(loginWin, 8, 5, "welcomee! %s", username);
+
+    wrefresh(loginWin);
+
+    getch();
+
+    delwin(loginWin);
+
+    clear();
+    refresh();
+}
 
 int hitungPoint(int nyawa) {
     switch (nyawa) {
@@ -23,6 +129,10 @@ int main() {
     start_color();
     int score = 0;
     int point = 0;
+
+    login();
+
+    loadUsers();
 
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
