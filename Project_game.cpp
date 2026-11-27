@@ -1,154 +1,224 @@
-include <iostream>
+#include <iostream>
 #include <ncurses.h>
 #include <cstdlib>
+#include <ctime>
 #include <cmath>
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <string>
 
 using namespace std;
 
 struct Pemain {
     string username;
-    string pasword;
+    string password;
     int totalScore;
 };
 
 vector<Pemain> daftarPemain;
+bool warnaAktif = false;
 
-void initwarna() {
+void initWarna() {
     if (has_colors()) {
         start_color();
-        init_pair(1, COLOR_CYAN, COLOR_BLACK);
-        init_pair(2, COLOR_GREEN, COLOR_BLACK);
-        init_pair(3, COLOR_RED, COLOR_BLACK);
-        init_pair(4, COLOR_YELLOW, COLOR_BLACK);
-        init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
-        
+        use_default_colors();
+        init_pair(1, COLOR_CYAN, -1);
+        init_pair(2, COLOR_GREEN, -1);
+        init_pair(3, COLOR_RED, -1);
+        init_pair(4, COLOR_YELLOW, -1);
+        init_pair(5, COLOR_MAGENTA, -1);
+        warnaAktif = true;
+    }
+}
+
+void pasangWarna(int pair, int ekstraAttr = A_NORMAL) {
+    if (warnaAktif) {
+        attron(COLOR_PAIR(pair) | ekstraAttr);
+    } else if (ekstraAttr != A_NORMAL) {
+        attron(ekstraAttr);
+    }
+}
+
+void lepasWarna(int pair, int ekstraAttr = A_NORMAL) {
+    if (warnaAktif) {
+        attroff(COLOR_PAIR(pair) | ekstraAttr);
+    } else if (ekstraAttr != A_NORMAL) {
+        attroff(ekstraAttr);
     }
 }
 
 void loadUsers() {
     daftarPemain.clear();
-
     ifstream file("users.txt");
-    Pemain p;
+    if (!file.is_open()) {
+        return;
+    }
 
-    while (file >> p.username >> p.pasword >> p.totalScore) {
+    Pemain p;
+    while (file >> p.username >> p.password >> p.totalScore) {
         daftarPemain.push_back(p);
     }
-    file.close();
 }
 
 void saveUsers() {
     ofstream file("users.txt");
+    if (!file.is_open()) {
+        return;
+    }
 
     for (const auto& pemain : daftarPemain) {
-        file << pemain.username << " " << pemain.pasword << " " << pemain.totalScore << endl;
+        file << pemain.username << " " << pemain.password << " " << pemain.totalScore << "\n";
     }
-    file.close();
 }
+
 int cariPemain(const string& username) {
-    for (int i = 0; i < daftarPemain.size(); i++) {
+    for (size_t i = 0; i < daftarPemain.size(); i++) {
         if (daftarPemain[i].username == username) {
-            return i;
+            return static_cast<int>(i);
         }
     }
     return -1;
 }
 
-void simpanRiwayat(const string username, int point, string hasil) {
-    ofstream file ("riwayat.txt", ios::app);
-    file << username << " " << " " << point << " " << hasil << endl;
-    file.close();
+void simpanRiwayat(const string& username, int point, const string& hasil) {
+    ofstream file("riwayat.txt", ios::app);
+    if (!file.is_open()) {
+        return;
+    }
+    file << username << " " << point << " " << hasil << "\n";
 }
 
-string inputText(int baris, int kolom, string label) {
+bool adaSpasi(const string& teks) {
+    return teks.find_first_of(" \t\r\n") != string::npos;
+}
+
+string inputText(int baris, int kolom, const string& label) {
     char buffer[100] = "";
 
+    move(baris, kolom);
+    clrtoeol();
     mvprintw(baris, kolom, "%s: ", label.c_str());
+    refresh();
+
     echo();
+    curs_set(1);
     getnstr(buffer, 99);
     noecho();
-    
+    curs_set(0);
+
     return string(buffer);
 }
 
 void tunggu() {
-    mvprintw(LINES -2, 2, "Tekan tombol apa saja untuk melanjutkan...");
+    pasangWarna(1);
+    mvprintw(LINES - 2, 2, "Tekan tombol apa saja untuk melanjutkan...");
+    lepasWarna(1);
     refresh();
     getch();
 }
 
 void registerPemain() {
     clear();
+    box(stdscr, 0, 0);
 
-    string username = inputText(2, 4, "masukan username: ");
-    string password = inputText(3, 4, "masukan password: ");
+    pasangWarna(1, A_BOLD);
+    mvprintw(2, 4, "=== REGISTRASI AKUN BARU ===");
+    lepasWarna(1, A_BOLD);
 
-    if (cariPemain(username) != -1) {
-        mvprintw (5, 4, "Username sudah terdaftar!");
+    string username = inputText(4, 4, "Masukkan username (tanpa spasi)");
+    string password = inputText(5, 4, "Masukkan password (tanpa spasi)");
+
+    if (username.empty() || password.empty()) {
+        pasangWarna(3);
+        mvprintw(7, 4, "Username dan password tidak boleh kosong!");
+        lepasWarna(3);
         tunggu();
         return;
     }
 
-<<<<<<< HEAD
+    if (adaSpasi(username) || adaSpasi(password)) {
+        pasangWarna(3);
+        mvprintw(7, 4, "Username dan password tidak boleh mengandung spasi!");
+        lepasWarna(3);
+        tunggu();
+        return;
+    }
+
+    if (cariPemain(username) != -1) {
+        pasangWarna(3);
+        mvprintw(7, 4, "Username sudah terdaftar!");
+        lepasWarna(3);
+        tunggu();
+        return;
+    }
+
     daftarPemain.push_back({username, password, 0});
     saveUsers();
 
-    attron(COLOR_PAIR(2) | A_BOLD);
+    pasangWarna(2, A_BOLD);
     mvprintw(7, 4, "Pendaftaran berhasil! Silakan login.");
-    attroff(COLOR_PAIR(2) | A_BOLD);
+    lepasWarna(2, A_BOLD);
     tunggu();
 }
-=======
-    mvwprintw(loginWin, 1, 17, "LOGIN PENGGUNA");
-    mvwprintw(loginWin, 3, 5, "masukan username:");
-    
-    char username[30] = "";
-    wrefresh(loginWin);
 
-    echo();
-    curs_set(1);
+int login() {
+    while (true) {
+        clear();
+        box(stdscr, 0, 0);
 
-    mvwgetnstr(loginWin, 5, 5, username, 29);
+        pasangWarna(1, A_BOLD);
+        mvprintw(2, 4, "=== GUESS THE NUMBERS - LOGIN ===");
+        lepasWarna(1, A_BOLD);
 
-    noecho();
-    curs_set(0);
+        mvprintw(4, 4, "1. Login");
+        mvprintw(5, 4, "2. Daftar Akun Baru");
+        mvprintw(6, 4, "3. Keluar");
+        mvprintw(8, 4, "Pilih [1-3]: ");
+        refresh();
 
-    namaPengguna = username;
+        char menu = getch();
+        if (menu == '2') {
+            registerPemain();
+            continue;
+        }
+        if (menu == '3') {
+            return -1;
+        }
+        if (menu != '1') {
+            continue;
+        }
 
-    mvwprintw(loginWin, 7, 5, "Login berhasil!!");
-    mvwprintw(loginWin, 8, 5, "welcomee! %s", username);
+        clear();
+        box(stdscr, 0, 0);
 
-    wrefresh(loginWin);
+        pasangWarna(1, A_BOLD);
+        mvprintw(2, 4, "=== LOGIN PENGGUNA ===");
+        lepasWarna(1, A_BOLD);
 
-    getch();
+        string username = inputText(4, 4, "Masukkan username");
+        string password = inputText(5, 4, "Masukkan password");
 
-    delwin(loginWin);
-
-
-    int login() {
-    clear();
-    mvprintw(2, 4, "LOGIN");
-
-    string username = inputText(6, 4, "masukan username: ");
-    string password = inputText(7, 5, "masukan password: ");
-
-    int index = cariPemain(username);
-
-    if (index != -1) {
-        if (daftarPemain[index].pasword == password) {
-            mvprintw(9, 4, "Login berhasil!");
+        int index = cariPemain(username);
+        if (index != -1 && daftarPemain[index].password == password) {
+            pasangWarna(2, A_BOLD);
+            mvprintw(7, 4, "Login berhasil! Selamat datang, %s.", daftarPemain[index].username.c_str());
+            lepasWarna(2, A_BOLD);
             tunggu();
             return index;
         }
-    }
 
-return -1;
+        pasangWarna(3);
+        mvprintw(7, 4, "Username atau password salah!");
+        lepasWarna(3);
+        tunggu();
+    }
 }
 
-int hitungPoint(int nyawa) {
+int hitungPoint(int nyawa, bool menang) {
+    if (!menang) {
+        return 0;
+    }
     switch (nyawa) {
         case 5: return 1000;
         case 4: return 900;
@@ -161,186 +231,270 @@ int hitungPoint(int nyawa) {
 
 void tampilkanLeaderboard() {
     clear();
+    box(stdscr, 0, 0);
 
     vector<Pemain> ranking = daftarPemain;
     sort(ranking.begin(), ranking.end(), [](const Pemain& a, const Pemain& b) {
-        return a.totalScore > b.totalScore;
+        if (a.totalScore != b.totalScore) {
+            return a.totalScore > b.totalScore;
+        }
+        return a.username < b.username;
     });
 
- mvprintw (2, 5, "========== LEADERBOARD ==========");
- mvprintw (4, 5, "RANK");
- mvprintw (4, 15, "USERNAME");
- mvprintw (4, 35, "TOTAL SCORE");
+    pasangWarna(1, A_BOLD);
+    mvprintw(2, 5, "========== LEADERBOARD ==========");
+    mvprintw(4, 5, "RANK");
+    mvprintw(4, 15, "USERNAME");
+    mvprintw(4, 35, "TOTAL SCORE");
+    lepasWarna(1, A_BOLD);
 
- int baris = 6;
-
- for(int i = 0; i < ranking.size(); i++) {
-    mvprintw(baris, 5, "%d", i + 1);
-    mvprintw(baris, 15, "%s", ranking[i].username.c_str());
-    mvprintw(baris, 35, "%d", ranking[i].totalScore);
-
-    baris++;
-
-    if (baris >= LINES - 3) {
+    if (ranking.empty()) {
+        pasangWarna(4);
+        mvprintw(6, 5, "Belum ada pemain yang terdaftar.");
+        lepasWarna(4);
         tunggu();
-        clear();
-        baris = 3;
+        return;
+    }
+
+    int baris = 6;
+    for (size_t i = 0; i < ranking.size(); i++) {
+        int pair = (i == 0) ? 5 : (i == 1 ? 2 : 1);
+        pasangWarna(pair);
+        mvprintw(baris, 5, "%zu", i + 1);
+        mvprintw(baris, 15, "%s", ranking[i].username.c_str());
+        mvprintw(baris, 35, "%d", ranking[i].totalScore);
+        lepasWarna(pair);
+
+        baris++;
+        if (baris >= LINES - 3) {
+            tunggu();
+            clear();
+            box(stdscr, 0, 0);
+            baris = 3;
         }
     }
 
-    if (ranking.empty()) {
-        mvprintw(6, 5, "Belum ada pemain yang terdaftar.");
-    }
-
     tunggu();
- }
+}
 
- void tampilkanRiwayat(string username) {
+void tampilkanRiwayat(const string& username) {
     clear();
+    box(stdscr, 0, 0);
 
-    mvprintw(2, 5, "========== RIWAYAT PERMAINAN ==========");
+    pasangWarna(1, A_BOLD);
+    mvprintw(2, 5, "========== RIWAYAT PERMAINAN (%s) ==========", username.c_str());
+    mvprintw(4, 5, "POINT");
+    mvprintw(4, 18, "HASIL");
+    lepasWarna(1, A_BOLD);
 
-    ifstream file("history.txt");
-
+    ifstream file("riwayat.txt");
     string nama, hasil;
-    int level, point;
-    int baris = 5;
+    int point;
+    int baris = 6;
     bool ditemukan = false;
 
-    mvprintw(4, 5, "LEVEL");
-    mvprintw(4, 15, "POINT");
-    mvprintw(4, 30, "HASIL");
-
-    while (file >> nama >> level >> point >> hasil) {
+    while (file.is_open() && (file >> nama >> point >> hasil)) {
         if (nama == username) {
-            mvprintw(baris, 5, "%d", level);
-            mvprintw(baris, 15, "%d", point);
-            mvprintw(baris, 30, "%s", hasil.c_str());
+            int pair = (hasil == "MENANG") ? 2 : 3;
+            pasangWarna(pair);
+            mvprintw(baris, 5, "+%d", point);
+            mvprintw(baris, 18, "%s", hasil.c_str());
+            lepasWarna(pair);
 
             baris++;
             ditemukan = true;
-            if (baris >= LINES -3) {
-                tunggu(); 
+            if (baris >= LINES - 3) {
+                tunggu();
                 clear();
-                baris = 4;
+                box(stdscr, 0, 0);
+                baris = 3;
             }
         }
     }
 
-    file.close();
-
-    if(!ditemukan) {
-        mvprintw(6, 5, "Belum ada riwayat permainan.");
+    if (!ditemukan) {
+        pasangWarna(4);
+        mvprintw(6, 5, "Belum ada riwayat permainan untuk akun ini.");
+        lepasWarna(4);
     }
 
     tunggu();
- }
+}
 
- int main() {
+void mainkanRonde(int userIndex) {
+    clear();
+    box(stdscr, 0, 0);
+
+    int angkaRahasia = (rand() % 100) + 1;
+    int nyawa = 5;
+    bool menang = false;
+
+    pasangWarna(1, A_BOLD);
+    mvprintw(2, 4, "Tebak angka 1 sampai 100! (Pemain: %s)", daftarPemain[userIndex].username.c_str());
+    lepasWarna(1, A_BOLD);
+
+    while (nyawa > 0) {
+        int pairNyawa = (nyawa == 1) ? 3 : (nyawa <= 2 ? 4 : 2);
+        pasangWarna(pairNyawa, A_BOLD);
+        mvprintw(4, 4, "Nyawa tersisa: %d   ", nyawa);
+        lepasWarna(pairNyawa, A_BOLD);
+
+        string rawInput = inputText(6, 4, "Masukkan tebakan (1-100)");
+        int tebakan = 0;
+
+        try {
+            size_t idx = 0;
+            tebakan = stoi(rawInput, &idx);
+            if (idx != rawInput.size()) {
+                throw invalid_argument("Bukan angka penuh");
+            }
+        } catch (...) {
+            move(8, 4);
+            clrtoeol();
+            move(9, 4);
+            clrtoeol();
+            pasangWarna(3);
+            mvprintw(8, 4, "Input tidak valid! Masukkan angka bulat 1 sampai 100.");
+            lepasWarna(3);
+            refresh();
+            continue;
+        }
+
+        if (tebakan < 1 || tebakan > 100) {
+            move(8, 4);
+            clrtoeol();
+            move(9, 4);
+            clrtoeol();
+            pasangWarna(4);
+            mvprintw(8, 4, "Angka harus berada di rentang 1 sampai 100!");
+            lepasWarna(4);
+            refresh();
+            continue;
+        }
+
+        if (tebakan == angkaRahasia) {
+            menang = true;
+            break;
+        }
+
+        nyawa--;
+        int selisih = abs(tebakan - angkaRahasia);
+
+        move(8, 4);
+        clrtoeol();
+        move(9, 4);
+        clrtoeol();
+
+        if (tebakan > angkaRahasia) {
+            pasangWarna(4);
+            mvprintw(8, 4, "Tebakan terlalu besar!");
+            lepasWarna(4);
+        } else {
+            pasangWarna(4);
+            mvprintw(8, 4, "Tebakan terlalu kecil!");
+            lepasWarna(4);
+        }
+
+        if (selisih <= 10) {
+            pasangWarna(2);
+            mvprintw(9, 4, "Info: Sudah cukup dekat!");
+            lepasWarna(2);
+        } else {
+            pasangWarna(3);
+            mvprintw(9, 4, "Info: Masih cukup jauh!");
+            lepasWarna(3);
+        }
+
+        refresh();
+    }
+
+    int point = hitungPoint(nyawa, menang);
+    daftarPemain[userIndex].totalScore += point;
+    saveUsers();
+
+    string statusHasil = menang ? "MENANG" : "KALAH";
+    simpanRiwayat(daftarPemain[userIndex].username, point, statusHasil);
+
+    if (menang) {
+        pasangWarna(2, A_BOLD);
+        mvprintw(11, 4, "MENANG!! Angkanya: %d", angkaRahasia);
+        mvprintw(12, 4, "Point didapat: +%d", point);
+        lepasWarna(2, A_BOLD);
+    } else {
+        pasangWarna(3, A_BOLD);
+        mvprintw(11, 4, "COBA LAGI! Angkanya: %d", angkaRahasia);
+        mvprintw(12, 4, "Point didapat: +%d", point);
+        lepasWarna(3, A_BOLD);
+    }
+
+    pasangWarna(1, A_BOLD);
+    mvprintw(13, 4, "Total score kamu: %d", daftarPemain[userIndex].totalScore);
+    lepasWarna(1, A_BOLD);
+
+    mvprintw(15, 4, "Tekan tombol apa saja untuk kembali ke menu...");
+    refresh();
+    getch();
+}
+
+int main() {
     initscr();
     cbreak();
     noecho();
-    start_color();
-    int score = 0;
-    int point = 0;
+    curs_set(0);
+    initWarna();
 
-    login();
-
+    srand(static_cast<unsigned int>(time(nullptr)));
     loadUsers();
-    tampilkanLeaderboard();
 
-    init_pair(1, COLOR_WHITE, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    init_pair(3, COLOR_RED, COLOR_BLACK);
+    int currentUser = login();
+    if (currentUser == -1) {
+        endwin();
+        return 0;
+    }
 
-    srand(clock());
     char pilihan;
-
     do {
         clear();
         box(stdscr, 0, 0);
 
-        attron(COLOR_PAIR(1));
-        mvprintw(2, 4, "GUESS THE NUMBERS");
-        mvprintw(4, 4, "1. Mulai Main");
-        mvprintw(5, 4, "2. Keluar");
-        mvprintw(7, 4, "Pilih [1-2]: ");
-        attroff(COLOR_PAIR(1));
+        pasangWarna(1, A_BOLD);
+        mvprintw(2, 4, "=== GUESS THE NUMBERS ===");
+        lepasWarna(1, A_BOLD);
+
+        mvprintw(3, 4, "Pemain: %s | Total Score: %d",
+                 daftarPemain[currentUser].username.c_str(),
+                 daftarPemain[currentUser].totalScore);
+
+        mvprintw(5, 4, "1. Mulai Main");
+        mvprintw(6, 4, "2. Lihat Leaderboard");
+        mvprintw(7, 4, "3. Lihat Riwayat Permainan");
+        mvprintw(8, 4, "4. Ganti Akun");
+        mvprintw(9, 4, "5. Keluar");
+        mvprintw(11, 4, "Pilih [1-5]: ");
         refresh();
-    
+
         pilihan = getch();
 
-        if (pilihan == '1') {
-            clear();
-            box(stdscr, 0, 0);
-
-            int angkaRahasia = (rand() % 100) + 1;
-            int tebakan = 0;
-            int nyawa = 5;
-            bool menang = false;
-            
-            mvprintw(2, 4, "Tebak angka 1 sampai 100!");
-
-            while (nyawa > 0) {
-                mvprintw(4, 4, "Nyawa tersisa: %d   ", nyawa);
-                mvprintw(6, 4, "Masukkan tebakan: ");
-                refresh();
-
-                echo();
-                scanw("%d", &tebakan);
-                noecho();
-
-                if (tebakan == angkaRahasia) {
-                    menang = true;
-                    break;
-                } else {
-                    nyawa--;
-                    int selisih = abs(tebakan - angkaRahasia);
-
-                    if (tebakan > angkaRahasia) {
-                        mvprintw(8, 4, "Tebakan terlalu besar!.     ");
-                    } else {
-                        mvprintw(8, 4, "Tebakan terlalu kecil!.     ");
-                    }
-
-                    if (selisih <= 10) {
-                        mvprintw(9, 4, "Info: Sudah cukup dekat!.   ");
-                    } else {
-                        mvprintw(9, 4, "Info: Masih cukup jauh!.    ");
-                    }
+        switch (pilihan) {
+            case '1':
+                mainkanRonde(currentUser);
+                break;
+            case '2':
+                tampilkanLeaderboard();
+                break;
+            case '3':
+                tampilkanRiwayat(daftarPemain[currentUser].username);
+                break;
+            case '4':
+                currentUser = login();
+                if (currentUser == -1) {
+                    pilihan = '5';
                 }
-                refresh();
-            }
-
-            if (menang) {
-
-                point = hitungPoint(nyawa);
-                score = score + point;
-
-                attron(COLOR_PAIR(2) | A_BOLD);
-                mvprintw(11, 4, "MENANG!! Angkanya: %d", angkaRahasia);
-                mvprintw(12, 4, "Point: +%d", point);
-                mvprintw(13, 4, "total score: %d", score);
-                attroff(COLOR_PAIR(2) | A_BOLD);
-
-            } else {
-
-                point = hitungPoint(nyawa);
-                score = score + point;
-
-                attron(COLOR_PAIR(3) | A_BOLD);
-                mvprintw(11, 4, "COBA LAGI!, Angkanya: %d", angkaRahasia);
-                mvprintw(12, 4, "Point yang di dapat: + %d", point);
-                mvprintw(13, 4, "total score: %d", score);
-                attroff(COLOR_PAIR(3) | A_BOLD);
-            }
-            
-            mvprintw(13, 4, "Tekan tombol apa saja untuk kembali...");
-            refresh();
-            getch();
+                break;
+            default:
+                break;
         }
-
-    } while (pilihan != '2');
+    } while (pilihan != '5');
 
     endwin();
     return 0;
