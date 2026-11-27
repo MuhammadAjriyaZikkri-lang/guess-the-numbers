@@ -1,4 +1,4 @@
-#include <iostream>
+include <iostream>
 #include <ncurses.h>
 #include <cstdlib>
 #include <cmath>
@@ -15,6 +15,18 @@ struct Pemain {
 };
 
 vector<Pemain> daftarPemain;
+
+void initwarna() {
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_CYAN, COLOR_BLACK);
+        init_pair(2, COLOR_GREEN, COLOR_BLACK);
+        init_pair(3, COLOR_RED, COLOR_BLACK);
+        init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
+        
+    }
+}
 
 void loadUsers() {
     daftarPemain.clear();
@@ -77,13 +89,16 @@ void registerPemain() {
     if (cariPemain(username) != -1) {
         mvprintw (5, 4, "Username sudah terdaftar!");
         tunggu();
+        return;
     }
 
 <<<<<<< HEAD
     daftarPemain.push_back({username, password, 0});
     saveUsers();
 
-    mvprintw(5, 4, "pendaftaran berhasil!");
+    attron(COLOR_PAIR(2) | A_BOLD);
+    mvprintw(7, 4, "Pendaftaran berhasil! Silakan login.");
+    attroff(COLOR_PAIR(2) | A_BOLD);
     tunggu();
 }
 =======
@@ -111,7 +126,7 @@ void registerPemain() {
     getch();
 
     delwin(loginWin);
->>>>>>> 197a7cf (Perbaiki login dan tambah leaderboard)
+
 
     int login() {
     clear();
