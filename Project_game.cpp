@@ -336,7 +336,10 @@ void mainkanRonde(int userIndex) {
     while (nyawa > 0) {
         int pairNyawa = (nyawa == 1) ? 3 : (nyawa <= 2 ? 4 : 2);
         pasangWarna(pairNyawa, A_BOLD);
-        mvprintw(4, 4, "Nyawa tersisa: %d   ", nyawa);
+        mvprintw(4, 4, "Nyawa tersisa: ");
+        for (int i = 0; i < nyawa; i++) {
+            printw("<3 ");
+        }
         lepasWarna(pairNyawa, A_BOLD);
 
         string rawInput = inputText(6, 4, "Masukkan tebakan (1-100)");
